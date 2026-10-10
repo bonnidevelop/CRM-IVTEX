@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from "express";
+import { AppError } from "../utils/app-error.js";
 
 export const errorHandler: ErrorRequestHandler = (
   err,
@@ -6,26 +7,19 @@ export const errorHandler: ErrorRequestHandler = (
   res,
   _next
 ) => {
-  const statusCode =
-    typeof err.statusCode === "number" &&
-    err.statusCode >= 400 &&
-    err.statusCode < 600
-      ? err.statusCode
-      : 500;
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    });
 
-  const message =
-    statusCode === 500
-      ? "Internal server error"
-      : typeof err.message === "string"
-        ? err.message
-        : "Request failed";
-
-  if (statusCode === 500) {
-    console.error("Unhandled application error:", err);
+    return;
   }
 
-  res.status(statusCode).json({
+  console.error("Unhandled application error:", err);
+
+  res.status(500).json({
     success: false,
-    message,
+    message: "Internal server error",
   });
 };

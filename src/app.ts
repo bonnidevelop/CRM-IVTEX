@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-
+import { AppError } from "./utils/app-error.js";
+import { sendSuccess } from "./utils/api-response.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
 const app = express();
@@ -41,22 +42,16 @@ app.use("/api", apiLimiter);
 
 // Health-check endpoint
 app.get("/api/v1/health", (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "CRM Sales Management API is running",
-    data: {
-      status: "healthy",
-    },
-  });
+  sendSuccess(
+    res,
+    "CRM Sales Management API is running",
+    { status: "healthy" }
+  );
 });
 
 // Handle unmatched routes
 app.use((_req, _res, next) => {
-  next(
-    Object.assign(new Error("Route not found"), {
-      statusCode: 404,
-    })
-  );
+  next(new AppError("Route not found", 404));
 });
 
 // Error handler 
