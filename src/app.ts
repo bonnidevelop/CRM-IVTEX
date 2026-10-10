@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import { AppError } from "./utils/app-error.js";
 import { sendSuccess } from "./utils/api-response.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.get("/api/v1/health", (_req, res) => {
     { status: "healthy" }
   );
 });
+
+app.use("/api/v1/auth", authRoutes);
 
 // Handle unmatched routes
 app.use((_req, _res, next) => {
