@@ -48,3 +48,7 @@ export const me: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+export const logout: RequestHandler = (_req, res) => {
+  sendSuccess(res, "Logged out successfully", { loggedOut: true });
+};

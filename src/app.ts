@@ -6,6 +6,13 @@ import { AppError } from "./utils/app-error.js";
 import { sendSuccess } from "./utils/api-response.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import leadRoutes from "./routes/lead.routes.js";
+import customerRoutes from "./routes/customer.routes.js";
+import dealRoutes from "./routes/deal.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
+import configRoutes from "./routes/config.routes.js";
 
 const app = express();
 
@@ -50,7 +57,15 @@ app.get("/api/v1/health", (_req, res) => {
   );
 });
 
+// CRM Endpoints
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/leads", leadRoutes);
+app.use("/api/v1/customers", customerRoutes);
+app.use("/api/v1/deals", dealRoutes);
+app.use("/api/v1/activities", activityRoutes);
+app.use("/api/v1/analytics", analyticsRoutes);
+app.use("/api/v1/config", configRoutes);
 
 // Handle unmatched routes
 app.use((_req, _res, next) => {

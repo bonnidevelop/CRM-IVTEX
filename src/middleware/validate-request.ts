@@ -22,3 +22,23 @@ export function validateBody(schema: ZodType): RequestHandler {
     next();
   };
 }
+
+export const validateQuery: (
+  schema: ZodType,
+) => RequestHandler = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.query);
+
+  if (!result.success) {
+    return res.status(400).json({
+      success: false,
+      message: "Query validation failed",
+      errors: result.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
+    });
+  }
+
+  res.locals.validatedQuery = result.data;
+  next();
+};
