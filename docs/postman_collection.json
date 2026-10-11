@@ -1,0 +1,1356 @@
+{
+  "info": {
+    "_postman_id": "crm-sales-management-api-v1",
+    "name": "CRM Sales Management System API",
+    "description": "Comprehensive RESTful backend API collection for CRM Sales Management System covering lead generation, lead qualification, customer conversion, deal management, activities, timeline audit logs, CRM config, and analytics.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "leadId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dealId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "activityId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if API server is up and healthy."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Executive\",\n  \"email\": \"alice@company.com\",\n  \"phone\": \"+1234567890\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new user account (defaults to sales_executive role)."
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('authToken', jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates credentials and returns a JWT access token. Automatically captures `authToken` collection variable upon success."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Retrieves authenticated user profile details."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logs out the authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Management (Admin)",
+      "item": [
+        {
+          "name": "Get Users (Paginated & Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10&role=sales_executive&isActive=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "Alice", "disabled": true },
+                { "key": "role", "value": "sales_executive" },
+                { "key": "isActive", "value": "true" },
+                { "key": "sortBy", "value": "createdAt", "disabled": true },
+                { "key": "sortOrder", "value": "desc", "disabled": true }
+              ]
+            },
+            "description": "Admin endpoint to retrieve paginated list of users with search, role, and active status filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('userId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob Manager\",\n  \"email\": \"bob@company.com\",\n  \"phone\": \"+1987654321\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"sales_manager\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Admin endpoint to create a user with specified role."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Retrieves user details by their ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob Manager Updated\",\n  \"phone\": \"+1999888777\",\n  \"role\": \"sales_manager\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Updates user details (name, email, phone, role, password)."
+          },
+          "response": []
+        },
+        {
+          "name": "Activate / Deactivate User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "status"]
+            },
+            "description": "Toggles active or inactive status of a user account."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Deletes user where appropriate (Admin only)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lead Management",
+      "item": [
+        {
+          "name": "Get Leads (Paginated & Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads?page=1&limit=10&status=new&priority=high&source=website",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "new" },
+                { "key": "priority", "value": "high" },
+                { "key": "source", "value": "website" },
+                { "key": "search", "value": "Acme", "disabled": true },
+                { "key": "assignedUser", "value": "{{userId}}", "disabled": true },
+                { "key": "startDate", "value": "2026-01-01", "disabled": true },
+                { "key": "endDate", "value": "2026-12-31", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Retrieves leads with multi-filter combinations, searching, date ranges, and sorting. Sales Executives automatically see only their assigned leads."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('leadId', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Global Dynamics Lead\",\n  \"email\": \"contact@globaldynamics.io\",\n  \"phone\": \"+14155552671\",\n  \"company\": \"Global Dynamics Inc\",\n  \"source\": \"website\",\n  \"status\": \"new\",\n  \"priority\": \"high\",\n  \"description\": \"Interested in enterprise CRM migration\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads"]
+            },
+            "description": "Creates a new sales lead. Records a timeline creation event."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Retrieves full lead details, populated assignee, and converted customer/deal references."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"high\",\n  \"description\": \"Updated client requirements after discovery call\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Updates lead properties. Changes to priority or status automatically record timeline audit entries."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Lead Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"qualified\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "status"]
+            },
+            "description": "Updates lead status (e.g. to 'qualified' or 'contacted'). Records timeline entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Assign / Reassign Lead (Manager / Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedSalesExecutive\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "assign"]
+            },
+            "description": "Assigns or reassigns lead to an active sales executive. Validates user existence and activity status."
+          },
+          "response": []
+        },
+        {
+          "name": "Convert Lead (ACID Transaction)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.customer && jsonData.data.customer.id) {",
+                  "        pm.collectionVariables.set('customerId', jsonData.data.customer.id);",
+                  "    }",
+                  "    if (jsonData.data.deal && jsonData.data.deal.id) {",
+                  "        pm.collectionVariables.set('dealId', jsonData.data.deal.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dealName\": \"Global Dynamics Enterprise Contract\",\n  \"dealValue\": 75000,\n  \"probability\": 60,\n  \"expectedClosingDate\": \"2026-11-30T00:00:00.000Z\",\n  \"dealStage\": \"proposal\",\n  \"customerAddress\": \"500 Oracle Parkway, Redwood City, CA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/convert",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "convert"]
+            },
+            "description": "Converts a qualified lead into a Customer and a Deal inside a MongoDB ACID transaction. Guarantees referential integrity."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Timeline Audit History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}/timeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}", "timeline"]
+            },
+            "description": "Retrieves chronological audit log entries for the specified lead."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Lead (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads", "{{leadId}}"]
+            },
+            "description": "Deletes lead where permitted (Admin only)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customer Management",
+      "item": [
+        {
+          "name": "Get Customers (Paginated & Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers?page=1&limit=10&status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "active" },
+                { "key": "search", "value": "Global", "disabled": true },
+                { "key": "assignedUser", "value": "{{userId}}", "disabled": true },
+                { "key": "startDate", "value": "2026-01-01", "disabled": true },
+                { "key": "endDate", "value": "2026-12-31", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Retrieves customers with search, pagination, date filtering, and RBAC visibility."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"David Wayne\",\n  \"email\": \"david@wayneenterprises.com\",\n  \"phone\": \"+12125550198\",\n  \"company\": \"Wayne Enterprises\",\n  \"address\": \"1007 Mountain Drive, Gotham\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"]
+            },
+            "description": "Creates a customer directly and logs a creation audit timeline."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Retrieves customer information, including original lead reference and associated deals."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"Suite 400, Financial District, New York, NY\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Updates customer contact and details."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Timeline",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}/timeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}", "timeline"]
+            },
+            "description": "Retrieves chronological audit events associated with the customer."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Deletes customer where permitted (Admin only)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Deal Management & Business Rules",
+      "item": [
+        {
+          "name": "Get Deals (Paginated & Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/deals?page=1&limit=10&stage=proposal&minAmount=10000&maxAmount=100000",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "stage", "value": "proposal" },
+                { "key": "minAmount", "value": "10000" },
+                { "key": "maxAmount", "value": "100000" },
+                { "key": "search", "value": "Contract", "disabled": true },
+                { "key": "assignedUser", "value": "{{userId}}", "disabled": true },
+                { "key": "customer", "value": "{{customerId}}", "disabled": true },
+                { "key": "closingDateStart", "value": "2026-10-01", "disabled": true },
+                { "key": "closingDateEnd", "value": "2026-12-31", "disabled": true },
+                { "key": "sortBy", "value": "dealValue" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Queries deals with amount ranges, closing date filters, and stage criteria."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Deal",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dealName\": \"Cloud Infrastructure Modernization\",\n  \"customerReference\": \"{{customerId}}\",\n  \"leadReference\": \"{{leadId}}\",\n  \"dealValue\": 45000,\n  \"probability\": 50,\n  \"expectedClosingDate\": \"2026-12-15T00:00:00.000Z\",\n  \"currentStage\": \"qualification\",\n  \"description\": \"Multi-cloud deployment proposal\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/deals",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals"]
+            },
+            "description": "Creates a deal with automatic expected revenue calculation (dealValue * probability / 100)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Deal By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/deals/{{dealId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals", "{{dealId}}"]
+            },
+            "description": "Retrieves deal details with populated customer, lead, and assignee references."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Deal Stage - Won",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentStage\": \"won\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/deals/{{dealId}}/stage",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals", "{{dealId}}", "stage"]
+            },
+            "description": "Marks deal as Won. Sets probability to 100% and triggers deal_won timeline event."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Deal Stage - Lost (Requires Reason)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentStage\": \"lost\",\n  \"lostReason\": \"Budget constraints deferred procurement to Q2 next fiscal year\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/deals/{{dealId}}/stage",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals", "{{dealId}}", "stage"]
+            },
+            "description": "Enforces business rule: Lost stage requires mandatory lostReason (min 3 chars) and sets probability to 0%."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Deal Timeline",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/deals/{{dealId}}/timeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals", "{{dealId}}", "timeline"]
+            },
+            "description": "Retrieves audit trail of deal stage transitions and assignments."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Deal (Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/deals/{{dealId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["deals", "{{dealId}}"]
+            },
+            "description": "Deletes deal where permitted (Admin only)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sales Activities & Follow-ups",
+      "item": [
+        {
+          "name": "Get Activities (Paginated & Filtered)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activities?page=1&limit=10&status=pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["activities"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "pending" },
+                { "key": "type", "value": "meeting", "disabled": true },
+                { "key": "assignedUser", "value": "{{userId}}", "disabled": true },
+                { "key": "relatedEntityType", "value": "lead", "disabled": true },
+                { "key": "relatedEntityId", "value": "{{leadId}}", "disabled": true },
+                { "key": "sortBy", "value": "dueDate" },
+                { "key": "sortOrder", "value": "asc" }
+              ]
+            },
+            "description": "Queries activities with dynamic overdue calculation in response."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('activityId', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"demo\",\n  \"title\": \"Architectural Deep Dive Demo\",\n  \"description\": \"Present platform capabilities to the technical team\",\n  \"dueDate\": \"2026-10-25T14:00:00.000Z\",\n  \"relatedEntityType\": \"deal\",\n  \"relatedEntityId\": \"{{dealId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/activities",
+              "host": ["{{baseUrl}}"],
+              "path": ["activities"]
+            },
+            "description": "Creates follow-up activity. Also registers follow_up_created timeline entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Activity As Completed",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activities/{{activityId}}/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["activities", "{{activityId}}", "complete"]
+            },
+            "description": "Sets activity status to completed, sets completedDate to now, and adds timeline entry."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Activity (Manager / Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activities/{{activityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["activities", "{{activityId}}"]
+            },
+            "description": "Deletes activity where permitted (Admin or Sales Manager)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard Metrics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "metrics"]
+            },
+            "description": "Returns key sales statistics: total leads, new leads, qualified leads, converted leads, conversion rate %, total customers, total deals, open/won/lost deals, total revenue, expected revenue, pending activities, and overdue activities."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sales Pipeline",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/pipeline",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "pipeline"]
+            },
+            "description": "Shows deal count, total value, and expected revenue per deal stage (qualification, discovery, proposal, negotiation, won, lost)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Team Performance (Manager / Admin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/team-performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "team-performance"]
+            },
+            "description": "Returns individual sales executive performance statistics (total leads, converted leads, conversion rate %, deals won, revenue generated, and overdue tasks)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "CRM Configuration (Admin)",
+      "item": [
+        {
+          "name": "Get CRM Configuration",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["config"]
+            },
+            "description": "Retrieves CRM system configuration."
+          },
+          "response": []
+        },
+        {
+          "name": "Update CRM Configuration",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Enterprise CRM Solutions\",\n  \"leadQualificationThreshold\": 60,\n  \"dealProbabilityRules\": {\n    \"qualification\": 10,\n    \"discovery\": 25,\n    \"proposal\": 50,\n    \"negotiation\": 80,\n    \"won\": 100,\n    \"lost\": 0\n  },\n  \"allowedCurrency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["config"]
+            },
+            "description": "Admin endpoint to update company configuration and probability rules."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

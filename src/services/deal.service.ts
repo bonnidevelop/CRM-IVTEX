@@ -218,6 +218,7 @@ export async function updateDeal(
   if (input.dealName) deal.dealName = input.dealName;
   if (input.dealValue !== undefined) deal.dealValue = input.dealValue;
   if (input.probability !== undefined) deal.probability = input.probability;
+  deal.expectedRevenue = Number(((deal.dealValue * deal.probability) / 100).toFixed(2));
   if (input.expectedClosingDate) deal.expectedClosingDate = input.expectedClosingDate;
   if (input.description !== undefined) deal.description = input.description;
 
@@ -288,6 +289,7 @@ export async function updateDealStage(
       throw new AppError("A Won deal must have a valid deal value greater than zero", 400);
     }
     deal.probability = 100;
+    deal.expectedRevenue = deal.dealValue;
   }
 
   // Business Rule: Lost deal should contain an appropriate reason & 0% probability
@@ -297,6 +299,7 @@ export async function updateDealStage(
     }
     deal.lostReason = input.lostReason;
     deal.probability = 0;
+    deal.expectedRevenue = 0;
   }
 
   const previousStage = deal.currentStage;

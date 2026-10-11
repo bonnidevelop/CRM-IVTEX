@@ -183,6 +183,14 @@ export async function updateLead(
   const prevPriority = lead.priority;
   const prevStatus = lead.status;
 
+  if (input.status && lead.status === "converted" && input.status !== "converted") {
+    throw new AppError("Cannot change status of an already converted lead", 400);
+  }
+
+  if (input.status === "converted" && lead.status !== "converted") {
+    throw new AppError("Direct update to converted status not allowed; use the convert endpoint", 400);
+  }
+
   if (input.name) lead.name = input.name;
   if (input.email) lead.email = input.email;
   if (input.phone) lead.phone = input.phone;
@@ -242,6 +250,10 @@ export async function updateLeadStatus(
 
   if (lead.status === "converted" && input.status !== "converted") {
     throw new AppError("Cannot change status of an already converted lead", 400);
+  }
+
+  if (input.status === "converted" && lead.status !== "converted") {
+    throw new AppError("Direct update to converted status not allowed; use the convert endpoint", 400);
   }
 
   const oldStatus = lead.status;
